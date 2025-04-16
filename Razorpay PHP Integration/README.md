@@ -134,6 +134,94 @@ try {
 ?>
 ```
 
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use Razorpay\Api\Api;
+
+$keyId = 'rzp_test_ST8iOahJJpWDVp';
+$keySecret = 'WknAG0tFstpj7QzCnXXzWisF';
+
+$api = new Api($keyId, $keySecret);
+
+// Get the amount from the form and convert it to paise
+$amount = $_POST['amount'] * 100;
+
+$order = $api->order->create([
+    'receipt' => uniqid(),
+    'amount' => $amount,
+    'currency' => 'INR'
+]);
+
+$orderId = $order['id'];
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Processing Payment</title>
+</head>
+<body>
+
+<h3>Redirecting to Razorpay...</h3>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    var options = {
+        "key": "<?php echo $keyId; ?>", // Enter the Key ID
+        "amount": "<?php echo $amount; ?>",
+        "currency": "INR",
+        "name": "My Demo Store",
+        "description": "Test Transaction",
+        "order_id": "<?php echo $orderId; ?>",
+        "handler": function (response){
+            // Optional: Post response to success.php
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'success.php';
+
+            var fields = {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+            };
+
+            for (var key in fields) {
+                if (fields.hasOwnProperty(key)) {
+                    var hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = key;
+                    hiddenField.value = fields[key];
+
+                    form.appendChild(hiddenField);
+                }
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+        },
+        "prefill": {
+            "name": "Test User",
+            "email": "test@example.com"
+        },
+        "theme": {
+            "color": "#3399cc"
+        }
+    };
+    var rzp = new Razorpay(options);
+    rzp.open();
+</script>
+
+<noscript>
+    <p style="color: red;">Please enable JavaScript to use Razorpay Checkout.</p>
+</noscript>
+
+</body>
+</html>
+```
+
 ---
 
 ## ✅ Final Notes
